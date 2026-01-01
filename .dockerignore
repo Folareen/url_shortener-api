@@ -1,0 +1,14 @@
+node_modules
+dist
+.vscode
+.git
+npm-debug.log
+Dockerfile
+docker-compose*.yml
+*.md
+.gitignore
+.dockerignore
+.prettierrc
+.eslintrc*
+test
+coverage

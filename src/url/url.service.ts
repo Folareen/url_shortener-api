@@ -1,14 +1,25 @@
 import { Injectable } from "@nestjs/common";
 import { Url } from "./interfaces/url.interface";
+import { PrismaService } from "src/prisma/prisma.service";
 
 
 @Injectable()
 export class UrlService {
     private readonly urls: Url[] = []
+    constructor(private readonly prisma: PrismaService) { }
 
     async createShortUrl(originalUrl: string) {
-
         const shortCode = Math.random().toString(36).substring(2, 8);
+
+        const see = await this.prisma.url.create({
+            data: {
+                url: originalUrl,
+                shortCode,
+            },
+        });
+
+        console.log('see this', see);
+
         const newUrl: Url = {
             id: Date.now().toString(),
             url: originalUrl,
