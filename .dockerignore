@@ -3,12 +3,14 @@ dist
 .vscode
 .git
 npm-debug.log
-Dockerfile
-docker-compose*.yml
 *.md
 .gitignore
 .dockerignore
 .prettierrc
 .eslintrc*
+eslint.config.mjs
 test
 coverage
+.env
+.env.*
+!.env.example
