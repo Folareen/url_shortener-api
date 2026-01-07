@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, NotFoundException } from "@nestjs/common";
 import { Url } from "./interfaces/url.interface";
 import { PrismaService } from "src/prisma/prisma.service";
 
@@ -36,39 +36,48 @@ export class UrlService {
     }
 
     async findByShortCode(shortCode: string) {
-        const url = this.urls.find(url => url.shortCode === shortCode);
-        return url
+        const url = await this.prisma.url.findUnique({ where: { shortCode } });
+        if (!url) throw new NotFoundException('Short URL not found');
+        return url;
     }
 
     async updateShortUrl(shortCode: string, url: string) {
-        const urlEntry = this.urls.find(url => url.shortCode === shortCode);
-        if (urlEntry) {
-            urlEntry.url = url;
-            urlEntry.updatedAt = new Date().toISOString();
+        try {
+            return await this.prisma.url.update({
+                where: { shortCode },
+                data: {
+                    url,
+                    updatedAt: new Date().toISOString(),
+                },
+            });
+        } catch (e) {
+            throw new NotFoundException('Short URL not found');
         }
-
-        return urlEntry
     }
 
     async deleteShortUrl(shortCode: string) {
-        const index = this.urls.findIndex(url => url.shortCode === shortCode);
-        if (index !== -1) {
-            this.urls.splice(index, 1);
-        }
-        return {
-            "message": "Short URL deleted successfully"
+        try {
+            await this.prisma.url.delete({ where: { shortCode } });
+            return { message: "Short URL deleted successfully" };
+        } catch (e) {
+            throw new NotFoundException('Short URL not found');
         }
     }
 
     async getShortUrlStats(shortCode: string) {
-        return this.urls.find(url => url.shortCode === shortCode);
+        const url = await this.prisma.url.findUnique({ where: { shortCode } });
+        if (!url) throw new NotFoundException('Short URL not found');
+        return url;
     }
 
     async incrementAccessCount(shortCode: string) {
-        const url = this.urls.find(url => url.shortCode === shortCode);
-        if (url) {
-            url.accessCount += 1;
+        try {
+            return await this.prisma.url.update({
+                where: { shortCode },
+                data: { accessCount: { increment: 1 } },
+            });
+        } catch (e) {
+            throw new NotFoundException('Short URL not found');
         }
-        return url;
     }
 }
