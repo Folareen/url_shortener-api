@@ -9,30 +9,30 @@ export class UrlService {
     constructor(private readonly prisma: PrismaService) { }
 
     async createShortUrl(originalUrl: string) {
-        const shortCode = Math.random().toString(36).substring(2, 8);
+        const result = await this.prisma.$transaction(async (prisma) => {
+            const url = await prisma.url.create({
+                data: {
+                    url: originalUrl,
+                    shortCode: '000000'
+                },
+            });
 
-        const see = await this.prisma.url.create({
-            data: {
-                url: originalUrl,
-                shortCode,
-            },
+            let idValue = url.id;
+            let shortCode = '';
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+            do {
+                shortCode = chars[idValue % 62] + shortCode;
+                idValue = Math.floor(idValue / 62);
+            } while (idValue > 0);
+            shortCode = shortCode.padStart(6, '0');
+
+            const updatedUrl = await prisma.url.update({
+                where: { id: url.id },
+                data: { shortCode: shortCode },
+            });
+            return updatedUrl;
         });
-
-        console.log('see this', see);
-
-        const newUrl: Url = {
-            id: Date.now().toString(),
-            url: originalUrl,
-            shortCode: shortCode,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-            accessCount: 0
-        }
-
-        console.log('Created short URL:', newUrl);
-        this.urls.push(newUrl);
-
-        return newUrl
+        return result;
     }
 
     async findByShortCode(shortCode: string) {
